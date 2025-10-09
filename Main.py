@@ -3,6 +3,9 @@ import pygame_gui
 import random
 import math
 
+from pygame_gui.elements import UITextEntryLine
+
+
 pygame.init()
 
 screen_largeur = 1000
@@ -15,8 +18,11 @@ ui_panel = pygame_gui.elements.UIPanel(relative_rect=pygame.Rect((0, 0), (200,sc
 physics_obj_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 0), (100, 50)), text="button", manager=manager, container=ui_panel)
 static_obj_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 100), (100,50)), text="button", manager=manager, container=ui_panel)
 force_g = 9.81
+gravity_input = UITextEntryLine(relative_rect=(pygame.Rect((20, 330), (150, 30))), manager=manager,container=ui_panel, initial_text="set gravity (ex 9.81)")
 objs = []
 ground = None
+delta = clock.tick(60)
+seconds = delta / 1000
 
 
 class object:
@@ -43,22 +49,13 @@ class physics_obj(object):
         self.weight = weight
         self.collided = False
         self.previousy = self.y
-        self.distancetravelled = None
+        self.distancetravelled = 0
         self.velocity_y = 0
         self.onground = False
-        self.initial_speed_y = 10
-        self.speed_y = 0
-        self.speed_x = 1
-
-    def apply_gravity(self):
-        if self.onground == False:
-            self.velocity_y = force_g
-            self.y += self.velocity_y
-            self.updaterect()
-        pass
+        self.velocity_x = 1
 
     def apply_velocity_x(self):
-        self.x += self.speed_x
+        self.x += self.velocity_x
         self.updaterect()
 
     def collision_detection(self, other_obj):
@@ -66,18 +63,24 @@ class physics_obj(object):
             return False
         
         if self.rect.colliderect(other_obj.rect):
-            print("COLLIDED")
-            print(self.y, self.previousy)
             self.onground = True
-            self.distancetravelled = self.y - self.previousy
-            self.get_velocity_y()
-            self.previousy = self.y
+            self.getdistancey()
         pass
 
+    def getdistancey(self):
+        self.distancetravelled = self.y - self.previousy
+        self.previousy = self.y
 
-    def get_velocity_y(self):
-        self.speed_y = math.sqrt(self.initial_speed_y**2 + 2 * (-force_g) * (-self.distancetravelled))
-        print(self.speed_y)
+
+    def apply_velocity_y(self):
+        if not self.onground:
+            self.velocity_y += force_g * seconds
+            self.y += self.velocity_y * seconds
+            self.updaterect()
+
+    def momentumloss():
+
+        pass
 
 class static_obj(object):
      def __init__(self, mass, weight, x, y, width, height, color):
@@ -101,7 +104,7 @@ def createstaticobject():
     rect_width = 30
     rect_height = 30
     rect_x = random.randint(250, 900)
-    rect_y = random.randint(100, 500)
+    rect_y = random.randint(100, 300)
     c = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 225))
 
 
@@ -122,7 +125,7 @@ def createground():
 createground()
 
 while running:
-    delta = clock.tick(60)
+    delta
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -144,7 +147,8 @@ while running:
     for obj in objs:
         obj.create_sprite()
         if isinstance(obj, physics_obj):
-            obj.apply_gravity()
+            obj.apply_velocity_y()
+            obj.getdistancey()
             for obj2 in objs:
                 obj.collision_detection(obj2)
                 pass
