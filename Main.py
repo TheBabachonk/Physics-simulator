@@ -7,7 +7,8 @@ from pygame_gui.elements import UITextEntryLine
 
 
 pygame.init()
-
+# 30 px = 1m
+pxpermeter = 30
 screen_largeur = 1000
 screen_longueur = 600
 screen = pygame.display.set_mode((screen_largeur, screen_longueur))
@@ -17,13 +18,12 @@ manager = pygame_gui.UIManager((screen_largeur, screen_longueur))
 ui_panel = pygame_gui.elements.UIPanel(relative_rect=pygame.Rect((0, 0), (200,screen_longueur)), manager=manager, container=None)
 physics_obj_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 0), (100, 50)), text="button", manager=manager, container=ui_panel)
 static_obj_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 100), (100,50)), text="button", manager=manager, container=ui_panel)
-force_g = 9.81
-gravity_input = UITextEntryLine(relative_rect=(pygame.Rect((20, 330), (150, 30))), manager=manager,container=ui_panel, initial_text="set gravity (ex 9.81)")
+force_g = 9.81 * pxpermeter
+gravity_input = UITextEntryLine(relative_rect=(pygame.Rect((20, 330), (150, 30))), manager=manager,container=ui_panel)
 objs = []
 ground = None
-delta = clock.tick(60)
-seconds = delta / 1000
-
+new_force_g = 0
+gravity_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((20,300), (150, 30)), manager=manager, container=ui_panel, text=f"Gravity ({force_g/pxpermeter:.2f} m/s²)")
 
 class object:
     def __init__(self, x, y, width, height, color):
@@ -77,9 +77,9 @@ class physics_obj(object):
             self.velocity_y += force_g * seconds
             self.y += self.velocity_y * seconds
             self.updaterect()
+            print(self.y)
 
     def momentumloss():
-
         pass
 
 class static_obj(object):
@@ -125,7 +125,8 @@ def createground():
 createground()
 
 while running:
-    delta
+    delta = clock.tick(60)
+    seconds = delta / 1000.0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -138,7 +139,13 @@ while running:
             if event.ui_element == static_obj_button:
                 print("SPAWN STATIC OBJECT")
                 createstaticobject()
-            pass
+
+        if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
+            if event.ui_element == gravity_input:
+                new_force_g = float(gravity_input.text)
+                force_g = new_force_g * pxpermeter
+                gravity_label.set_text(f"Gravity ({force_g/pxpermeter:.2f} m/s²)")
+                pass
 
         manager.process_events(event)
 
