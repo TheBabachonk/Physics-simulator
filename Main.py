@@ -24,9 +24,11 @@ objs = []
 ground = None
 new_force_g = 0
 gravity_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((20,300), (150, 30)), manager=manager, container=ui_panel, text=f"Gravity ({force_g/pxpermeter:.2f} m/s²)")
-start_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 500), (100, 50)), manager=manager, container=ui_panel, text="Start")
-restart_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 550), (100, 50)), manager=manager, container=ui_panel, text="Restart")
+start_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 400), (50, 50)), manager=manager, container=ui_panel, text="Start")
+restart_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((100, 400), (75, 50)), manager=manager, container=ui_panel, text="Restart")
 simulation_started = False
+active_window = None
+current_windowed_object = None
 
 class object:
     def __init__(self, x, y, width, height, color, mass):
@@ -133,8 +135,26 @@ def createground():
     objs.append(ground)
 
 def createwindow(obj):
-    obj_window = pygame_gui.elements.UIPanel()
-    pass
+    global active_window
+    global current_windowed_object
+
+    rect_x = 50
+    rect_y = 20
+    current_windowed_object = obj
+
+    if active_window is not None:
+        active_window.kill()
+        active_window = None
+
+    obj_window = pygame_gui.elements.UIWindow(rect=pygame.Rect((obj.x, obj.y), (200, 200)), manager=manager, window_display_title="UPUPITSOURMOMENT")
+
+    current_mass = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((rect_x, 0), (100, 20)), manager=manager, container=obj_window, text=f"Mass : {obj.mass}")
+
+    mass_input = UITextEntryLine(relative_rect=pygame.Rect((rect_x, rect_y), (100, 20)), manager=manager, container=obj_window)
+
+
+
+    active_window = obj_window
 
 
 createground()
@@ -156,6 +176,9 @@ while running:
                 createstaticobject()
 
             if event.ui_element == start_button:
+                if active_window is not None:
+                    active_window.kill()
+                    active_window = None
                 simulation_started = True
 
             if event.ui_element == restart_button:
@@ -170,15 +193,16 @@ while running:
                 new_force_g = float(gravity_input.text)
                 force_g = new_force_g * pxpermeter
                 gravity_label.set_text(f"Gravity ({force_g/pxpermeter:.2f} m/s²)")
+
+            if active_window is not None:
+                if event.ui_element == createwindow(current_windowed_object).mass_input:
+                    print("Even likes boys")
                 pass
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             for obj in objs:
                 if obj.rect.collidepoint(event.pos):
-                    print("HOHOHO")
-                    print(obj.weight)
-            pass
-
+                    createwindow(obj)
 
         manager.process_events(event)
 
