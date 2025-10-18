@@ -2,14 +2,16 @@ import pygame
 import pygame_gui
 import random
 import math
-from Constants import pxpermeter, screen_largeur, screen_longueur, screen, clock, running
+from Constants import pxpermeter, screen_largeur, screen_longueur, running
 from Window import mass_input, width_input, createwindow
+from Classes import physics_obj, static_obj
 
 from pygame_gui.elements import UITextEntryLine
 
 
 pygame.init()
-# 30 px = 1m
+screen = pygame.display.set_mode((screen_largeur, screen_longueur))
+clock = pygame.time.Clock()
 manager = pygame_gui.UIManager((screen_largeur, screen_longueur))
 ui_panel = pygame_gui.elements.UIPanel(relative_rect=pygame.Rect((-2, -1), (200,screen_longueur + 50)), manager=manager, container=None)
 physics_obj_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 0), (150, 50)), text="Spawn Physic Object", manager=manager, container=ui_panel)
@@ -23,77 +25,6 @@ gravity_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((20,300), 
 start_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 400), (50, 50)), manager=manager, container=ui_panel, text="Start")
 restart_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((100, 400), (75, 50)), manager=manager, container=ui_panel, text="Restart")
 simulation_started = False
-
-class object:
-    def __init__(self, x, y, width, height, color, mass):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.color = color
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        self.mass = mass
-        self.weight = self.mass * (force_g/pxpermeter)
-        pass
-
-    def updaterect(self):
-        self.rect.x = self.x
-        self.rect.y = self.y
-
-    def create_sprite(self):
-        pygame.draw.rect(screen, self.color, self.rect)
-
-class physics_obj(object):
-    def __init__(self, mass, x, y, width, height, color):
-        super().__init__(x, y, width, height, color, mass)
-        self.collided = False
-        self.previousy = self.y
-        self.distancetravelled = 0
-        self.velocity_y = 0
-        self.onground = False
-        self.velocity_x = 1
-        self.initial_x = self.x
-        self.initial_y = self.y
-
-    def apply_velocity_x(self):
-        self.x += self.velocity_x
-        self.updaterect()
-
-    def collision_detection(self, other_obj):
-        if self is other_obj:
-            return False
-        
-        if self.rect.colliderect(other_obj.rect):
-            self.onground = True
-            self.getdistancey()
-        pass
-
-    def getdistancey(self):
-        self.distancetravelled = self.y - self.previousy
-        self.previousy = self.y
-
-
-    def apply_velocity_y(self):
-        if not self.onground:
-            self.velocity_y += force_g * seconds
-            self.y += self.velocity_y * seconds
-            self.updaterect()
-
-    def momentumloss():
-        pass
-
-    def reset(self):
-        self.x = self.initial_x
-        self.y = self.initial_y
-        self.updaterect()
-        self.onground = False
-        self.velocity_x = 0
-        self.velocity_y = 0
-        pass
-
-class static_obj(object):
-     def __init__(self, mass, x, y, width, height, color):
-        super().__init__(x, y, width, height, color, mass)
 
 def createphysicsobject():
     rect_width = 30
@@ -184,9 +115,10 @@ while running:
     screen.fill((0,0,0))
     
     for obj in objs:
-        obj.create_sprite()
+        obj.create_sprite(screen)
         if isinstance(obj, physics_obj) and simulation_started:
-            obj.apply_velocity_y()
+            obj.apply_velocity_y(force_g, seconds)
+            obj.getweight(force_g)
             obj.getdistancey()
             for obj2 in objs:
                 obj.collision_detection(obj2)
