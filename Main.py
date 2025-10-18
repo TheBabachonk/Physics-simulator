@@ -3,27 +3,28 @@ import pygame_gui
 import random
 import math
 from Constants import pxpermeter, screen_largeur, screen_longueur, running
-from Window import mass_input, width_input, createwindow
+from Window import mass_input, width_input, createwindow, update_mass, current_windowed_object, active_window
 from Classes import physics_obj, static_obj
 
 from pygame_gui.elements import UITextEntryLine
 
 
 pygame.init()
+
+force_g = 9.81 * pxpermeter
 screen = pygame.display.set_mode((screen_largeur, screen_longueur))
 clock = pygame.time.Clock()
 manager = pygame_gui.UIManager((screen_largeur, screen_longueur))
 ui_panel = pygame_gui.elements.UIPanel(relative_rect=pygame.Rect((-2, -1), (200,screen_longueur + 50)), manager=manager, container=None)
 physics_obj_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 0), (150, 50)), text="Spawn Physic Object", manager=manager, container=ui_panel)
 static_obj_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 100), (150,50)), text="Sapwn Static Object", manager=manager, container=ui_panel)
-force_g = 9.81 * pxpermeter
-gravity_input = UITextEntryLine(relative_rect=(pygame.Rect((20, 330), (150, 30))), manager=manager,container=ui_panel)
-objs = []
-ground = None
-new_force_g = 0
 gravity_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((20,300), (150, 30)), manager=manager, container=ui_panel, text=f"Gravity ({force_g/pxpermeter:.2f} m/s²)")
 start_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 400), (50, 50)), manager=manager, container=ui_panel, text="Start")
 restart_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((100, 400), (75, 50)), manager=manager, container=ui_panel, text="Restart")
+gravity_input = UITextEntryLine(relative_rect=(pygame.Rect((20, 330), (150, 30))), manager=manager,container=ui_panel)
+objs = []
+new_force_g = 0
+
 simulation_started = False
 
 def createphysicsobject():
@@ -92,14 +93,17 @@ while running:
                 pass
 
         if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
+            print("K")
+            print(active_window)
             if event.ui_element == gravity_input:
                 new_force_g = float(gravity_input.text)
                 force_g = new_force_g * pxpermeter
                 gravity_label.set_text(f"Gravity ({force_g/pxpermeter:.2f} m/s²)")
 
             if active_window is not None:
+                print("LLL")
                 if event.ui_element == mass_input:
-                    print("Even likes boys")
+                    update_mass(current_windowed_object)
 
                 if event.ui_element == width_input:
                     print("kok")
