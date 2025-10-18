@@ -2,18 +2,14 @@ import pygame
 import pygame_gui
 import random
 import math
+from Constants import pxpermeter, screen_largeur, screen_longueur, screen, clock, running
+from Window import mass_input, width_input, createwindow
 
 from pygame_gui.elements import UITextEntryLine
 
 
 pygame.init()
 # 30 px = 1m
-pxpermeter = 30
-screen_largeur = 1000
-screen_longueur = 600
-screen = pygame.display.set_mode((screen_largeur, screen_longueur))
-clock = pygame.time.Clock()
-running = True
 manager = pygame_gui.UIManager((screen_largeur, screen_longueur))
 ui_panel = pygame_gui.elements.UIPanel(relative_rect=pygame.Rect((-2, -1), (200,screen_longueur + 50)), manager=manager, container=None)
 physics_obj_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 0), (150, 50)), text="Spawn Physic Object", manager=manager, container=ui_panel)
@@ -27,8 +23,6 @@ gravity_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((20,300), 
 start_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 400), (50, 50)), manager=manager, container=ui_panel, text="Start")
 restart_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((100, 400), (75, 50)), manager=manager, container=ui_panel, text="Restart")
 simulation_started = False
-active_window = None
-current_windowed_object = None
 
 class object:
     def __init__(self, x, y, width, height, color, mass):
@@ -134,28 +128,6 @@ def createground():
     ground = static_obj(1000, rect_x, rect_y, rect_width, rect_height, c)
     objs.append(ground)
 
-def createwindow(obj):
-    global active_window
-    global current_windowed_object
-
-    rect_x = 50
-    rect_y = 20
-    current_windowed_object = obj
-
-    if active_window is not None:
-        active_window.kill()
-        active_window = None
-
-    obj_window = pygame_gui.elements.UIWindow(rect=pygame.Rect((obj.x, obj.y), (200, 200)), manager=manager, window_display_title="UPUPITSOURMOMENT")
-
-    current_mass = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((rect_x, 0), (100, 20)), manager=manager, container=obj_window, text=f"Mass : {obj.mass}")
-
-    mass_input = UITextEntryLine(relative_rect=pygame.Rect((rect_x, rect_y), (100, 20)), manager=manager, container=obj_window)
-
-
-
-    active_window = obj_window
-
 
 createground()
 
@@ -195,14 +167,17 @@ while running:
                 gravity_label.set_text(f"Gravity ({force_g/pxpermeter:.2f} m/s²)")
 
             if active_window is not None:
-                if event.ui_element == createwindow(current_windowed_object).mass_input:
+                if event.ui_element == mass_input:
                     print("Even likes boys")
+
+                if event.ui_element == width_input:
+                    print("kok")
                 pass
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             for obj in objs:
                 if obj.rect.collidepoint(event.pos):
-                    createwindow(obj)
+                    createwindow(obj, manager)
 
         manager.process_events(event)
 
