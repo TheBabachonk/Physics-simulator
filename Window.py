@@ -2,17 +2,25 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UITextEntryLine
 
-active_window = None
+active_window_objects = []
 current_windowed_object = None
 mass_input = None
 width_input = None
-current_mass = None
+height_input = None
+mass_label = None
+width_label = None
+height_label = None
 
 def createwindow(obj, manager):
     global active_window
     global current_windowed_object
     global mass_input
-    global current_mass
+    global width_input
+    global height_input
+    global width_label
+    global mass_label
+    global height_label
+
 
     rect_x = 50
 
@@ -28,18 +36,29 @@ def createwindow(obj, manager):
 
     active_window = obj_window
 
-    current_mass = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((rect_x, 0), (100, 20)), manager=manager, container=obj_window, text=f"Mass : {obj.mass}")
+    mass_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((rect_x, 0), (100, 20)), manager=manager, container=obj_window, text=f"Mass : {obj.mass}")
 
     mass_input = UITextEntryLine(relative_rect=pygame.Rect((rect_x, 20), (100, 20)), manager=manager, container=obj_window)
 
-    width = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((rect_x, 40), (100, 20)), manager=manager, container=obj_window, text=f"Width : {obj.width}")
+    width_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((rect_x, 40), (100, 20)), manager=manager, container=obj_window, text=f"Width : {obj.width}")
 
     width_input = UITextEntryLine(relative_rect=pygame.Rect((rect_x, 60), (100, 20)), manager=manager, container=obj_window)
 
-    print(current_windowed_object)
+    height_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((rect_x, 80), (100, 20)), manager=manager, container=obj_window, text=f"Height : {obj.height}" )
 
-def update_mass(obj):
-    new_mass = float(mass_input.text)
-    obj.mass = new_mass
-    current_mass.set_text(f"Mass : {obj.mass}")
-    print(obj.mass)
+    height_input = UITextEntryLine(relative_rect=pygame.Rect((rect_x, 100), (100, 20)), manager=manager, container=obj_window)
+
+
+    
+
+
+def update_value(obj, obj_input, obj_parameter, obj_label, obj_text):
+    new_value = float(obj_input)
+    setattr(obj, obj_parameter, new_value)
+    obj_label.set_text(f"{obj_text} {getattr(obj, obj_parameter)}")
+
+    if obj_parameter == "width":
+        obj.rect.width = int(new_value)
+
+    if obj_parameter == "height":
+        obj.rect.height = int(new_value)

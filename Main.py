@@ -3,7 +3,7 @@ import pygame_gui
 import random
 import math
 from Constants import pxpermeter, screen_largeur, screen_longueur, running
-from Window import mass_input, width_input, createwindow, update_mass, current_windowed_object, active_window
+import Window as Window_Manager
 from Classes import physics_obj, static_obj
 
 from pygame_gui.elements import UITextEntryLine
@@ -80,9 +80,9 @@ while running:
                 createstaticobject()
 
             if event.ui_element == start_button:
-                if active_window is not None:
-                    active_window.kill()
-                    active_window = None
+                if Window_Manager.active_window is not None:
+                    Window_Manager.active_window.kill()
+                    Window_Manager.active_window = None
                 simulation_started = True
 
             if event.ui_element == restart_button:
@@ -93,26 +93,25 @@ while running:
                 pass
 
         if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
-            print("K")
-            print(active_window)
             if event.ui_element == gravity_input:
                 new_force_g = float(gravity_input.text)
                 force_g = new_force_g * pxpermeter
                 gravity_label.set_text(f"Gravity ({force_g/pxpermeter:.2f} m/s²)")
 
-            if active_window is not None:
-                print("LLL")
-                if event.ui_element == mass_input:
-                    update_mass(current_windowed_object)
+            if Window_Manager.active_window is not None:
+                if event.ui_element == Window_Manager.mass_input:
+                    Window_Manager.update_value(Window_Manager.current_windowed_object, Window_Manager.mass_input.text, "mass", Window_Manager.mass_label, f"Mass : ")
+                if event.ui_element == Window_Manager.width_input:
+                    Window_Manager.update_value(Window_Manager.current_windowed_object, Window_Manager.width_input.text, "width", Window_Manager.width_label, f"Width : ")
+                if event.ui_element == Window_Manager.height_input:
+                    Window_Manager.update_value(Window_Manager.current_windowed_object, Window_Manager.height_input.text, "height", Window_Manager.height_label, f"Height : ")
 
-                if event.ui_element == width_input:
-                    print("kok")
                 pass
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             for obj in objs:
                 if obj.rect.collidepoint(event.pos):
-                    createwindow(obj, manager)
+                    Window_Manager.createwindow(obj, manager)
 
         manager.process_events(event)
 
