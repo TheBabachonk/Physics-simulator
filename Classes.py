@@ -25,16 +25,23 @@ class object:
 class physics_obj(object):
     def __init__(self, mass, x, y, width, height, color):
         super().__init__(x, y, width, height, color, mass)
+        self.initial_velocity_x = 0
+        self.initial_velocity_y = 0
+        self.velocity_x = self.initial_velocity_x
+        self.velocity_y = self.initial_velocity_y
         self.collided = False
         self.previousy = self.y
         self.distancetravelled = 0
-        self.velocity_y = 0
         self.onground = False
-        self.velocity_x = 1
         self.initial_x = self.x
         self.initial_y = self.y
+        self.initial_velocity_y_set = False
+        self.initial_velocity_x_set = False
 
     def apply_velocity_x(self):
+        if self.initial_velocity_x_set is not True:
+            self.velocity_x = self.initial_velocity_x
+            self.initial_velocity_x_set = True
         self.x += self.velocity_x
         self.updaterect()
 
@@ -53,6 +60,9 @@ class physics_obj(object):
 
 
     def apply_velocity_y(self, force_g, seconds):
+        if self.initial_velocity_y_set is not True:
+            self.velocity_y = self.initial_velocity_y
+            self.initial_velocity_y_set = True
         if not self.onground:
             self.velocity_y += force_g * seconds
             self.y += self.velocity_y * seconds
@@ -66,8 +76,8 @@ class physics_obj(object):
         self.y = self.initial_y
         self.updaterect()
         self.onground = False
-        self.velocity_x = 0
-        self.velocity_y = 0
+        self.velocity_x = self.initial_velocity_y
+        self.velocity_y = self.initial_velocity_x
         pass
 
 class static_obj(object):

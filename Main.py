@@ -20,7 +20,7 @@ physics_obj_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20,
 static_obj_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 100), (150,50)), text="Sapwn Static Object", manager=manager, container=ui_panel)
 gravity_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((20,300), (150, 30)), manager=manager, container=ui_panel, text=f"Gravity ({force_g/pxpermeter:.2f} m/s²)")
 start_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((20, 400), (50, 50)), manager=manager, container=ui_panel, text="Start")
-restart_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((100, 400), (75, 50)), manager=manager, container=ui_panel, text="Restart")
+restart_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((100, 400), (75, 50)), manager=manager, container=ui_panel, text="Reset")
 gravity_input = UITextEntryLine(relative_rect=(pygame.Rect((20, 330), (150, 30))), manager=manager,container=ui_panel)
 objs = []
 new_force_g = 0
@@ -70,6 +70,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         
+        # --- Handle UI Events ---
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == physics_obj_button:
                 print("SPAWN PHYSICS OBJECT")
@@ -80,13 +81,19 @@ while running:
                 createstaticobject()
 
             if event.ui_element == start_button:
-                if Window_Manager.active_window is not None:
-                    Window_Manager.active_window.kill()
-                    Window_Manager.active_window = None
+                if Window_Manager.active_window:
+                    for window in list(Window_Manager.active_window):
+                        window.kill()
+                        Window_Manager.active_window.remove(window) 
+                
                 simulation_started = True
 
             if event.ui_element == restart_button:
                 simulation_started = False
+                if Window_Manager.active_window:
+                    for window in list(Window_Manager.active_window):
+                        window.kill()
+                        Window_Manager.active_window.remove(window)
                 for obj in objs:
                     if isinstance(obj, physics_obj):
                         obj.reset()
@@ -94,24 +101,44 @@ while running:
 
         if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
             if event.ui_element == gravity_input:
-                new_force_g = float(gravity_input.text)
-                force_g = new_force_g * pxpermeter
-                gravity_label.set_text(f"Gravity ({force_g/pxpermeter:.2f} m/s²)")
+                try:
+                    new_force_g = float(gravity_input.text)
+                    force_g = new_force_g * pxpermeter
+                    gravity_label.set_text(f"Gravity ({force_g/pxpermeter:.2f} m/s²)")
+                except ValueError:
+                    print("Invalid input for gravity. Please enter a number.")
+            
+            if hasattr(event.ui_element, 'object_ids'):
+                if '#mass_input' in event.ui_element.object_ids:
+                    Window_Manager.update_value(event.ui_element, "mass", "Mass : ")
+                elif '#width_input' in event.ui_element.object_ids:
+                    Window_Manager.update_value(event.ui_element, "width", "Width : ")
+                elif '#height_input' in event.ui_element.object_ids:
+                    Window_Manager.update_value(event.ui_element, "height", "Height : ")
+                elif '#initial_velocity_y_input' in event.ui_element.object_ids:
+                    Window_Manager.update_value(event.ui_element, "initial_velocity_y", "IVY : ")
+                elif '#initial_velocity_x_input' in event.ui_element.object_ids:
+                    Window_Manager.update_value(event.ui_element, "initial_velocity_x", "IVX : ")
 
-            if Window_Manager.active_window is not None:
-                if event.ui_element == Window_Manager.mass_input:
-                    Window_Manager.update_value(Window_Manager.current_windowed_object, Window_Manager.mass_input.text, "mass", Window_Manager.mass_label, f"Mass : ")
-                if event.ui_element == Window_Manager.width_input:
-                    Window_Manager.update_value(Window_Manager.current_windowed_object, Window_Manager.width_input.text, "width", Window_Manager.width_label, f"Width : ")
-                if event.ui_element == Window_Manager.height_input:
-                    Window_Manager.update_value(Window_Manager.current_windowed_object, Window_Manager.height_input.text, "height", Window_Manager.height_label, f"Height : ")
 
-                pass
+        if event.type == pygame_gui.UI_WINDOW_CLOSE:
+            closed_window = event.ui_element
+            if closed_window in Window_Manager.active_window:
+                Window_Manager.active_window.remove(closed_window)
+
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             for obj in objs:
                 if obj.rect.collidepoint(event.pos):
-                    Window_Manager.createwindow(obj, manager)
+                    window_exists = False
+                    for existing_window in Window_Manager.active_window:
+                        if hasattr(existing_window, 'linked_object') and existing_window.linked_object == obj:
+                            window_exists = True
+                            # Use set_focus_set to bring the window to the front
+                            manager.set_focus_set(existing_window) 
+                            break
+                    if not window_exists:
+                        Window_Manager.createwindow(obj, manager)
 
         manager.process_events(event)
 
@@ -121,6 +148,7 @@ while running:
         obj.create_sprite(screen)
         if isinstance(obj, physics_obj) and simulation_started:
             obj.apply_velocity_y(force_g, seconds)
+            obj.apply_velocity_x()
             obj.getweight(force_g)
             obj.getdistancey()
             for obj2 in objs:
