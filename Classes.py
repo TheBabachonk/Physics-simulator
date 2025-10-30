@@ -60,6 +60,7 @@ class physics_obj(object):
 
 
     def apply_velocity_y(self, force_g, seconds):
+        print(self.velocity_y)
         if self.initial_velocity_y_set is not True:
             self.velocity_y = self.initial_velocity_y
             self.initial_velocity_y_set = True
@@ -76,8 +77,10 @@ class physics_obj(object):
         self.y = self.initial_y
         self.updaterect()
         self.onground = False
-        self.velocity_x = self.initial_velocity_y
-        self.velocity_y = self.initial_velocity_x
+        self.initial_velocity_x_set = False
+        self.initial_velocity_y_set = False
+        self.velocity_x = self.initial_velocity_x
+        self.velocity_y = self.initial_velocity_y
         pass
 
 class static_obj(object):
