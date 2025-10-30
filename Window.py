@@ -1,7 +1,7 @@
 import pygame
 import pygame_gui
 from pygame_gui.elements import UITextEntryLine
-from Classes import physics_obj # Assuming 'Classes' is where physics_obj is defined
+from Classes import physics_obj
 
 active_window = []
 current_windowed_object = None
@@ -14,7 +14,12 @@ def createwindow(obj, manager):
 
     current_windowed_object = obj
 
-    obj_window = pygame_gui.elements.UIWindow(rect=pygame.Rect((obj.rect.x, obj.rect.y), (200, 240)), manager=manager, window_display_title="Object Properties")
+
+    window_height = 240
+    if isinstance(obj, physics_obj):
+        window_height = 280
+    
+    obj_window = pygame_gui.elements.UIWindow(rect=pygame.Rect((obj.rect.x, obj.rect.y), (200, window_height)), manager=manager, window_display_title="Object Properties")
 
     obj_window.linked_object = obj
     obj_window.owner_window = obj_window
@@ -35,6 +40,12 @@ def createwindow(obj, manager):
         initial_velocity_y_input = UITextEntryLine(relative_rect=pygame.Rect((rect_x, 140), (100, 20)), manager=manager, container=obj_window, object_id='#initial_velocity_y_input')
         initial_velocity_x_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((rect_x, 160), (100, 20)), manager=manager, container=obj_window, text=f"IVX : {obj.initial_velocity_x}")
         initial_velocity_x_input = UITextEntryLine(relative_rect=pygame.Rect((rect_x, 180), (100, 20)), manager=manager, container=obj_window, object_id="#initial_velocity_x_input")
+        
+        # NEW: Gravity input for physics objects
+        gravity_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((rect_x, 200), (100, 20)), manager=manager, container=obj_window, text=f"Gravity : {obj.gravity_force:.2f}")
+        gravity_input = UITextEntryLine(relative_rect=pygame.Rect((rect_x, 220), (100, 20)), manager=manager, container=obj_window, object_id='#gravity_input')
+
+
         obj_window.initial_velocity_y_label = initial_velocity_y_label
         obj_window.initial_velocity_x_label = initial_velocity_x_label
         initial_velocity_y_input.parent_window_ref = obj_window
@@ -43,10 +54,16 @@ def createwindow(obj, manager):
         initial_velocity_y_input.linked_object = obj
         initial_velocity_x_input.linked_object = obj
 
+        # NEW: Link gravity elements
+        obj_window.gravity_label = gravity_label
+        gravity_input.parent_window_ref = obj_window
+        gravity_input.linked_object = obj
 
     else:
         initial_velocity_y_label = None 
         initial_velocity_y_input = None
+        gravity_label = None
+        gravity_input = None
 
 
     obj_window.mass_label = mass_label
@@ -91,6 +108,11 @@ def update_value(text_input_element, obj_parameter, obj_text):
             if isinstance(obj, physics_obj) and parent_window.initial_velocity_x_label:
                 parent_window.initial_velocity_x_label.set_text(f"{obj_text} {getattr(obj, obj_parameter)}")
                 obj.velocity_x = new_value # This affects the current velocity
+        # NEW: Handle gravity_force update
+        elif obj_parameter == "gravity_force":
+            if isinstance(obj, physics_obj) and parent_window.gravity_label:
+                parent_window.gravity_label.set_text(f"{obj_text} {getattr(obj, obj_parameter):.2f}")
+
 
     except ValueError:
         print(f"Invalid input for {obj_parameter}: {text_input_element.get_text()}")

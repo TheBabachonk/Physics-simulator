@@ -12,8 +12,9 @@ class object:
         self.mass = mass
         pass
 
-    def getweight(self, force_g):
-        self.weight = self.mass * (force_g/pxpermeter)
+
+    def getweight(self, gravity_force_m_s2):
+        self.weight = self.mass * gravity_force_m_s2 
 
     def updaterect(self):
         self.rect.x = self.x
@@ -23,7 +24,7 @@ class object:
         pygame.draw.rect(screen, self.color, self.rect)
 
 class physics_obj(object):
-    def __init__(self, mass, x, y, width, height, color):
+    def __init__(self, mass, x, y, width, height, color, gravity_force_m_s2=9.81):
         super().__init__(x, y, width, height, color, mass)
         self.initial_velocity_x = 0
         self.initial_velocity_y = 0
@@ -37,6 +38,8 @@ class physics_obj(object):
         self.initial_y = self.y
         self.initial_velocity_y_set = False
         self.initial_velocity_x_set = False
+        self.old_rect = self.rect
+        self.gravity_force = gravity_force_m_s2
 
     def apply_velocity_x(self):
         if self.initial_velocity_x_set is not True:
@@ -50,22 +53,29 @@ class physics_obj(object):
             return False
         
         if self.rect.colliderect(other_obj.rect):
-            self.onground = True
-            self.getdistancey()
+            if isinstance(other_obj, static_obj):
+                if self.rect.bottom >= other_obj.rect.top and self.old_rect.bottom < other_obj.rect.top:
+                    self.onground = True
+                elif self.rect.left <= other_obj.rect.right and self.old_rect.left > other_obj.rect.right:
+                    print("HIT LEFT")
+                if self.rect.right >= other_obj.rect.left and self.old_rect.right < other_obj.rect.left:
+                    print("HIT RIGHT")
+                elif self.rect.top <= other_obj.rect.bottom and self.old_rect.top > other_obj.rect.bottom:
+                    print("HIT TOP")
+            pass
         pass
 
     def getdistancey(self):
         self.distancetravelled = self.y - self.previousy
         self.previousy = self.y
 
-
-    def apply_velocity_y(self, force_g, seconds):
-        print(self.velocity_y)
+    def apply_velocity_y(self, seconds):
+        self.old_rect = self.rect.copy()
         if self.initial_velocity_y_set is not True:
-            self.velocity_y = self.initial_velocity_y
+            self.velocity_y = -self.initial_velocity_y
             self.initial_velocity_y_set = True
         if not self.onground:
-            self.velocity_y += force_g * seconds
+            self.velocity_y += (self.gravity_force * pxpermeter) * seconds
             self.y += self.velocity_y * seconds
             self.updaterect()
 
