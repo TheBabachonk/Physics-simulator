@@ -185,16 +185,28 @@ while running:
     screen.fill((0,0,0))
     
     for obj in objs:
-        obj.create_sprite(screen)
+        if isinstance(obj, physics_obj):
+            obj.old_rect = obj.rect.copy()
+
+    for obj in objs:
         if isinstance(obj, physics_obj) and simulation_started:
-            for obj2 in objs:
-                obj.collision_detection(obj2)
-                pass
             obj.apply_velocity_y(seconds)
             obj.apply_velocity_x()
             obj.getweight(obj.gravity_force)
             obj.getdistancey()
 
+    for obj in objs:
+        if isinstance(obj, physics_obj) and simulation_started:
+            for obj2 in objs:
+                if obj is not obj2: 
+                    obj.collision_detection(obj2)
+            
+            if obj.rect.bottom >= screen_longueur - 100 and obj.velocity_y > -0.5 and obj.velocity_y < 0.5:
+                obj.onground = True
+                obj.velocity_y = 0
+
+    for obj in objs:
+        obj.create_sprite(screen) 
 
     manager.update(delta)
     manager.draw_ui(screen)
