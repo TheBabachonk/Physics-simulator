@@ -63,10 +63,9 @@ class physics_obj(object):
                     self.y = other_obj.rect.top - self.height
                     self.updaterect()
                     self.onground = True
-                    if isinstance(other_obj, static_obj):
+                    if isinstance(other_obj, static_obj) and self.velocity_x == 0:
                         v = 0
-                        self.velocity_y = -(((self.mass*self.velocity_y)+(other_obj.mass * v)-(other_obj.mass * v))/(self.mass))
-                    print(self.velocity_y)
+                        self.velocity_y = -(((self.mass * self.velocity_y)+(other_obj.mass * v))/(self.mass + other_obj.mass))
                     return
 
                 elif self.old_rect.top >= other_obj.rect.bottom and overlap_bottom > 0:
