@@ -1,7 +1,9 @@
 import pygame
 from Constants import pxpermeter
 
+
 class object:
+
     def __init__(self, x, y, width, height, color, mass):
         self.x = x
         self.y = y
@@ -12,9 +14,8 @@ class object:
         self.mass = mass
         pass
 
-
     def getweight(self, gravity_force_m_s2):
-        self.weight = self.mass * gravity_force_m_s2 
+        self.weight = self.mass * gravity_force_m_s2
 
     def updaterect(self):
         self.rect.x = int(self.x)
@@ -23,8 +24,17 @@ class object:
     def create_sprite(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
 
+
 class physics_obj(object):
-    def __init__(self, mass, x, y, width, height, color, gravity_force_m_s2=9.81):
+
+    def __init__(self,
+                 mass,
+                 x,
+                 y,
+                 width,
+                 height,
+                 color,
+                 gravity_force_m_s2=9.81):
         super().__init__(x, y, width, height, color, mass)
         self.initial_velocity_x = 0
         self.initial_velocity_y = 0
@@ -51,7 +61,7 @@ class physics_obj(object):
     def collision_detection(self, other_obj):
         if self is other_obj:
             return False
-        
+
         if self.rect.colliderect(other_obj.rect):
             if isinstance(other_obj, static_obj):
                 overlap_left = self.rect.right - other_obj.rect.left
@@ -62,10 +72,11 @@ class physics_obj(object):
                 if self.old_rect.bottom <= other_obj.rect.top and overlap_top > 0:
                     self.y = other_obj.rect.top - self.height
                     self.updaterect()
-                    self.onground = True
                     if isinstance(other_obj, static_obj) and self.velocity_x == 0:
                         v = 0
-                        self.velocity_y = -(((self.mass * self.velocity_y)+(other_obj.mass * v))/(self.mass + other_obj.mass))
+                        self.velocity_y = -(((self.mass * self.velocity_y) +
+                                            (other_obj.mass * v)) /
+                                            (self.mass + other_obj.mass))
                     return
 
                 elif self.old_rect.top >= other_obj.rect.bottom and overlap_bottom > 0:
@@ -74,7 +85,7 @@ class physics_obj(object):
                     self.velocity_y = -self.velocity_y * 0.5
                     print("HIT TOP")
                     return
-                
+
                 elif self.old_rect.right <= other_obj.rect.left and overlap_left > 0:
                     self.x = other_obj.rect.left - self.width
                     self.updaterect()
@@ -82,13 +93,13 @@ class physics_obj(object):
                     print("HIT LEFT")
                     return
 
-                elif self.old_rect.left >= other_obj.rect.right and overlap_right > 0:
+                elif self.old_rect.left >= other_obj.rect.right and overlap_right > 0: 
                     self.x = other_obj.rect.right
                     self.updaterect()
                     self.velocity_x = -self.velocity_x * 0.5
                     print("HIT RIGHT")
                     return
-            
+
             if self.onground and self.rect.bottom > other_obj.rect.top and self.rect.top < other_obj.rect.bottom:
                 self.y = other_obj.rect.top - self.height
                 self.updaterect()
@@ -105,7 +116,7 @@ class physics_obj(object):
         if self.initial_velocity_y_set is not True:
             self.velocity_y = -self.initial_velocity_y
             self.initial_velocity_y_set = True
-        
+
         if self.velocity_y != 0:
             self.onground = False
 
@@ -126,6 +137,8 @@ class physics_obj(object):
         self.old_rect = self.rect.copy()
         pass
 
+
 class static_obj(object):
-     def __init__(self, mass, x, y, width, height, color):
+
+    def __init__(self, mass, x, y, width, height, color):
         super().__init__(x, y, width, height, color, mass)
